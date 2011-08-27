@@ -19,7 +19,7 @@ class Book(object):
         return (len(line) <= self.lineLength)
     
     def _split(self, line):
-        '''Split a string into substrings. much simpler than Str.split(), keeps whitespace.'''
+        '''Split a string into substrings. Much simpler than Str.split(), keeps whitespace.'''
         l = []
         i = ''
         for c in line:
@@ -68,18 +68,45 @@ class BookReader(object):
     '''Display the book in a terminal'''
     def __init__(self, screen):
         self.screen = screen
+        self.book = Book('example.txt')
         
+        curses.curs_set(0)
+        self.cols = curses.COLS
+        self.rows = curses.LINES
+        i = 0
+        di = 1
+        while True:
+            if i+1 >= self.rows:
+                di = -di
+            elif i-1 == 0 and di < 0:
+                di = -di
+            
+            i += di
+            
+            self.drawReverseLine('hello', i)
+            if (i-5) > 0 and di > 0:
+                self.drawLine('     ', i-5)
+            elif (i+5) < self.rows and di < 0:
+                self.drawLine('     ', i+5)
+            time.sleep(0.02)
+        
+    def drawReverseLine(self, line, y, x=0):
+        self.screen.addstr(y, x, line, curses.A_REVERSE)
+        self.refresh()
+        
+    def drawLine(self, line, y, x=0):
+        self.screen.addstr(y, x, line)
+        self.refresh()
+        
+    def refresh(self):
+        self.screen.refresh()
 
 if __name__ == '__main__':
     #Main program bits
-    def main(screen):
-        book = Book('example.txt')
+    def main(stdscr):
         #foreground/background colour pair
         curses.init_pair(1,curses.COLOR_BLACK,curses.COLOR_WHITE)
-        return BookReader(screen)
+        return BookReader(stdscr)
     
     curses.wrapper(main)
-    #for i in range(40):
-        #print '......'
-        #print book.line()
     
