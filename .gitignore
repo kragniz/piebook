@@ -1,4 +1,6 @@
 #ignore python bytecode
 *.pyc
+#and history file
+*.hst
 #also backup files
 *~

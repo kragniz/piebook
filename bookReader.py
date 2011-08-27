@@ -1,6 +1,7 @@
 #/usr/bin/env python
 #A small text-based ebook reader
-import curses, sys, time, traceback
+import curses, sys, time, json
+from os.path import splitext
 
 class Book(object):
     '''Handle reading and manipulating lines from a text file'''
@@ -30,6 +31,9 @@ class Book(object):
                 i += c
         l += [i]
         return l
+    
+    def setPosition(self, lineNumber):
+        '''Make lineNumber the current line'''
                 
     def line(self):
         '''Return the next line'''
@@ -62,25 +66,38 @@ class Book(object):
 class BookHistory(object):
     '''Make and write the settings/progress for a particular book'''
     def __init__(self):
-        self._bookFileName = ''
-        self._lineNumber = 0
-        
-    def read(self, historyFileName):
-        f = open(historyFileName).readlines()
-        d = []
-        for line in f:
-            if '#' in line: #handle some comments
-                d += [line[:line.index('#')].strip()] #allow the comment to start on a line of code
-            else:
-                d += [line.strip()]
-        while '' in data:
-            d.remove('')
+        self._historyData = {
+            'bookFileName' : '',
+            'lineNumber' : 0,
+            'speed' : 2.5}
             
-        d = [l.lower() for l in d]
+    def setBookFile(self, bookFileName):
+        self._historyData['bookFileName'] = bookFileName
         
-        for l in d:
-            if l.startswith('currentLine'):
-                self._lineNumber = l[12:]
+    def setLineNumber(self, n):
+        self._historyData['lineNumber'] = n
+        
+    def setSpeed(self, s):
+        self._historyData['speed'] = s
+        
+    def lineNumber(self):
+        return self._historyData['lineNumber']
+        
+    def read(self, historyFileName=None):
+        '''Read the settings made from a previous run of this program'''
+        if not historyFileName:
+            historyFileName = splitext(self._historyData['bookFileName'])[0] + '.hst'
+            
+        self._historyData = json.loads(open(historyFileName).readlines())
+        
+    def write(self, historyFileName=None):
+        '''Write the settings for next time the program is run'''
+        if not historyFileName:
+            historyFileName = splitext(self._historyData['bookFileName'])[0] + '.hst'
+            
+        f = open(historyFileName, 'w')
+        f.writelines(json.dumps(self._historyData, sort_keys=True, indent=4))
+        f.close()
     
 class BookReader(object):
     '''Display the book in a terminal'''
@@ -103,7 +120,7 @@ class BookReader(object):
                 i += 1
             self.drawNewLine(thisLine, i)
             lastLine = thisLine
-            time.sleep(0.2)
+            time.sleep(2.5)
         
     def drawNewLine(self, line, y, x=0):
         self.screen.addstr(y, x, line[:curses.COLS-1].ljust(curses.COLS), curses.A_UNDERLINE)
@@ -126,7 +143,8 @@ if __name__ == '__main__':
                 
         if sys.argv[1] == 'history':
             history = BookHistory()
-            history.read()
+            history.setBookFile('example.txt')
+            history.write()
             
     else:
         def main(stdscr):
