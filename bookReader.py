@@ -88,7 +88,8 @@ class BookHistory(object):
         if not historyFileName:
             historyFileName = splitext(self._historyData['bookFileName'])[0] + '.hst'
             
-        self._historyData = json.loads(open(historyFileName).readlines())
+        data = ''.join(open(historyFileName).readlines())
+        self._historyData = json.loads(data)
         
     def write(self, historyFileName=None):
         '''Write the settings for next time the program is run'''
@@ -144,6 +145,8 @@ if __name__ == '__main__':
         if sys.argv[1] == 'history':
             history = BookHistory()
             history.setBookFile('example.txt')
+            history.read()
+            print 'line number:', history.lineNumber()
             history.write()
             
     else:
