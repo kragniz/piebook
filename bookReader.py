@@ -8,7 +8,7 @@ class Book(object):
         self.lineLength = 80
         self.text = open(textFileName, 'r')
         
-        self.continuedWords = []
+        self.w = [] #words left over from the last line
         
     def setLineLength(self, length):
         '''Set the length of each line of the output'''
@@ -17,27 +17,41 @@ class Book(object):
     def _checkLength(self, line):
         return (len(line) <= self.lineLength)
     
+    def _split(self, line):
+        '''Split a string into substrings. much simpler than Str.split(), keeps whitespace.'''
+        l = []
+        i = ''
+        for c in line:
+            if c == ' ':
+                l += [i+' ']
+                i = ''
+            else:
+                i += c
+        l += [i]
+        return l
+                
     def line(self):
         '''Return the next line'''
         line = []
         words = []
         
-        if self.continuedWords:
-            while self._checkLength(' '.join(line)) and self.continuedWords:
-                line += [self.continuedWords.pop(0)]
+        if self.w:
+            while self._checkLength(''.join(line)) and self.w:
+                line += [self.w.pop(0)]
                 
-        if self._checkLength(' '.join(line)):
-            words = self._nextLine().split()
-            while self._checkLength(' '.join(line)) and words:
-                line += [words.pop(0)]
-        else:
-            self.continuedWords = [line.pop(-1)] + self.continuedWords
-            
-        if not self._checkLength(' '.join(line)):
-            self.continuedWords = [line.pop(-1)] + self.continuedWords
-            
-        self.continuedWords += words
-        return ' '.join(line)
+        if not self.w:
+            if self._checkLength(''.join(line)):
+                words = self._split(self._nextLine())
+                while self._checkLength(''.join(line)) and words:
+                    line += [words.pop(0)]
+            else:
+                self.w = [line.pop(-1)] + self.w
+                
+            if not self._checkLength(''.join(line)):
+                self.w = [line.pop(-1)] + self.w
+                
+            self.w += words
+        return ''.join(line)
             
     def _nextLine(self):
         '''Return a single line from the book'''
@@ -56,8 +70,6 @@ class BookReader(object):
 if __name__ == '__main__':
     #Main program bits
     book = Book('example.txt')
-    print book.line()
-    print book.line()
-    print book.line()
-    print book.line()
-    print book.line()
+    for i in range(30):
+        print book.line()
+    
