@@ -112,10 +112,16 @@ class BookReader(object):
         curses.curs_set(0)
         self.cols = curses.COLS
         self.rows = curses.LINES
+        self.screen.timeout(0)
         
         i = 0
         lastLine = ''
         while True:
+            #keystrokes/commands
+            c =  self.screen.getch()
+            if c == 'q':
+                break
+            
             thisLine = self.book.line()
             self.drawLine(lastLine, i)
             if i+2 >= curses.LINES:
