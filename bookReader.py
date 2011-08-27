@@ -62,7 +62,25 @@ class Book(object):
 class BookHistory(object):
     '''Make and write the settings/progress for a particular book'''
     def __init__(self):
-        pass
+        self._bookFileName = ''
+        self._lineNumber = 0
+        
+    def read(self, historyFileName):
+        f = open(historyFileName).readlines()
+        d = []
+        for line in f:
+            if '#' in line: #handle some comments
+                d += [line[:line.index('#')].strip()] #allow the comment to start on a line of code
+            else:
+                d += [line.strip()]
+        while '' in data:
+            d.remove('')
+            
+        d = [l.lower() for l in d]
+        
+        for l in d:
+            if l.startswith('currentLine'):
+                self._lineNumber = l[12:]
     
 class BookReader(object):
     '''Display the book in a terminal'''
@@ -105,6 +123,11 @@ if __name__ == '__main__':
             book = Book('example.txt')
             for i in range(30):
                 print book.line()
+                
+        if sys.argv[1] == 'history':
+            history = BookHistory()
+            history.read()
+            
     else:
         def main(stdscr):
             #foreground/background colour pair
