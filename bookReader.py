@@ -39,7 +39,7 @@ class Book(object):
             while self._checkLength(''.join(line)) and self.w:
                 line += [self.w.pop(0)]
                 
-        if not self.w:
+        else:
             if self._checkLength(''.join(line)):
                 words = self._split(self._nextLine())
                 while self._checkLength(''.join(line)) and words:
@@ -51,7 +51,8 @@ class Book(object):
                 self.w = [line.pop(-1)] + self.w
                 
             self.w += words
-        return ''.join(line)
+        
+        return ''.join(line).replace('\n', '')
             
     def _nextLine(self):
         '''Return a single line from the book'''
@@ -70,6 +71,7 @@ class BookReader(object):
 if __name__ == '__main__':
     #Main program bits
     book = Book('example.txt')
-    for i in range(30):
+    for i in range(40):
+        print '......'
         print book.line()
     
