@@ -82,6 +82,9 @@ class BookHistory(object):
         
     def lineNumber(self):
         return self._historyData['lineNumber']
+    
+    def incrementLineNumber(self):
+        self._historyData['lineNumber'] += 1
         
     def read(self, historyFileName=None):
         '''Read the settings made from a previous run of this program'''
@@ -147,6 +150,7 @@ if __name__ == '__main__':
             history.setBookFile('example.txt')
             history.read()
             print 'line number:', history.lineNumber()
+            history.incrementLineNumber()
             history.write()
             
     else:
