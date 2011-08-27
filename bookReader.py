@@ -47,11 +47,11 @@ class Book(object):
                     line += [words.pop(0)]
             else:
                 self.w = [line.pop(-1)] + self.w
-                
-            if not self._checkLength(''.join(line)):
-                self.w = [line.pop(-1)] + self.w
-                
-            self.w += words
+            
+        while not self._checkLength(''.join(line)):
+            self.w = [line.pop(-1)] + self.w
+            
+        self.w += words
         
         return ''.join(line).replace('\n', '')
             
@@ -79,13 +79,13 @@ class BookReader(object):
         while True:
             thisLine = self.book.line()
             self.drawLine(lastLine, i)
-            if i+1 == curses.LINES:
+            if i+2 >= curses.LINES:
                 i = 0
             else:
                 i += 1
             self.drawNewLine(thisLine, i)
             lastLine = thisLine
-            time.sleep(0.3)
+            time.sleep(0.2)
         
     def drawNewLine(self, line, y, x=0):
         self.screen.addstr(y, x, line[:curses.COLS-1].ljust(curses.COLS), curses.A_UNDERLINE)
@@ -100,10 +100,16 @@ class BookReader(object):
 
 if __name__ == '__main__':
     #Main program bits
-    def main(stdscr):
-        #foreground/background colour pair
-        #curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        return BookReader(stdscr)
-    
-    curses.wrapper(main)
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'book':
+            book = Book('example.txt')
+            for i in range(30):
+                print book.line()
+    else:
+        def main(stdscr):
+            #foreground/background colour pair
+            #curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
+            return BookReader(stdscr)
+        
+        curses.wrapper(main)
     
