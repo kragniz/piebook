@@ -2,6 +2,7 @@
 #A small text-based ebook reader
 import curses, sys, time, json
 from os.path import splitext
+from threading import Thread
 
 class Book(object):
     '''Handle reading and manipulating lines from a text file'''
@@ -108,6 +109,8 @@ class BookReader(object):
     def __init__(self, screen):
         self.screen = screen
         self.book = Book('example.txt')
+        self.inputThread = InputThread(self.screen)
+        self.inputThread.start()
         
         curses.curs_set(0)
         self.cols = curses.COLS
@@ -143,6 +146,17 @@ class BookReader(object):
     def refresh(self):
         self.screen.refresh()
 
+class InputThread(Thread):
+    def __init__(self, screen):
+        Thread.__init__(self, name="InputThread")
+        self.screen = screen
+        
+    def run(self):
+        while True:
+            c =  self.screen.getch()
+            if c == 'q':
+                print 'q got'
+        
 if __name__ == '__main__':
     #Main program bits
     if len(sys.argv) > 1:
@@ -161,8 +175,6 @@ if __name__ == '__main__':
             
     else:
         def main(stdscr):
-            #foreground/background colour pair
-            #curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
             return BookReader(stdscr)
         
         curses.wrapper(main)
