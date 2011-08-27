@@ -1,5 +1,6 @@
 #/usr/bin/env python
 #A small text-based ebook reader
+import curses, sys, time, traceback
 
 class Book(object):
     '''Handle reading and manipulating lines from a text file'''
@@ -65,13 +66,20 @@ class BookHistory(object):
     
 class BookReader(object):
     '''Display the book in a terminal'''
-    def __init__(self):
-        pass
-    
+    def __init__(self, screen):
+        self.screen = screen
+        
+
 if __name__ == '__main__':
     #Main program bits
-    book = Book('example.txt')
-    for i in range(40):
-        print '......'
-        print book.line()
+    def main(screen):
+        book = Book('example.txt')
+        #foreground/background colour pair
+        curses.init_pair(1,curses.COLOR_BLACK,curses.COLOR_WHITE)
+        return BookReader(screen)
+    
+    curses.wrapper(main)
+    #for i in range(40):
+        #print '......'
+        #print book.line()
     
