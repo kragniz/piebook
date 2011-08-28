@@ -120,42 +120,47 @@ class BookReader(object):
         self.rows = curses.LINES
         self.screen.timeout(0)
         
-        i = 0
+        self.i = 0
         lastLine = ''
         t1 = 0
         try:
             while not self.exitObject.stopping():
                 key = self.inputThread.read()
                 if key == 32: #space character
-                    self.changePaused()
+                    self.togglePaused()
+                
                 if not self.paused():
-                    if time.time()-t1 >= 2.5:# or skipLine:
+                    if time.time()-t1 >= 2.5 or key == 258: #key down
                         t1 = time.time()
                         thisLine = self.book.line()
-                        self.drawLine(lastLine, i)
-                        if i+2 >= curses.LINES:
-                            i = 0
+                        self.drawLine(lastLine)
+                        if self.i+2 >= curses.LINES:
+                            self.i = 0
                         else:
-                            i += 1
-                        self.drawNewLine(thisLine, i)
+                            self.i += 1
+                        self.drawNewLine(thisLine)
                         lastLine = thisLine
                 time.sleep(0.03) #try to save some cpu cycles
         finally:
             #always stop the thread
             self.inputThread.stop()
  
-    def drawNewLine(self, line, y, x=0):
+    def drawNewLine(self, line, y=None, x=0):
+        if y == None:
+            y = self.i
         self.screen.addstr(y, x, line[:curses.COLS-1].ljust(curses.COLS), curses.A_UNDERLINE)
         self.refresh()
         
-    def drawLine(self, line, y, x=0):
+    def drawLine(self, line, y=None, x=0):
+        if y == None:
+            y = self.i
         self.screen.addstr(y, x, line[:curses.COLS-1].ljust(curses.COLS), curses.color_pair(0))
         self.refresh()
         
     def refresh(self):
         self.screen.refresh()
         
-    def changePaused(self):
+    def togglePaused(self):
         self._paused = not self._paused
         
     def paused(self):
