@@ -116,9 +116,8 @@ class BookReader(object):
         self._paused = False
         
         curses.curs_set(0)
-        self.cols = curses.COLS
-        self.rows = curses.LINES
         self.screen.timeout(0)
+        curses.init_pair(1,curses.COLOR_RED,curses.COLOR_YELLOW)
         
         self.i = 0
         lastLine = ''
@@ -128,9 +127,14 @@ class BookReader(object):
                 key = self.inputThread.read()
                 if key == 32: #space character
                     self.togglePaused()
+                    t1 = 0
+                    self.showMessage('PAUSED', 'red')
+                    
+                if key == 258: #key down
+                    t1 = 0
                 
                 if not self.paused():
-                    if time.time()-t1 >= 2.5 or key == 258: #key down
+                    if time.time()-t1 >= 2.5:
                         t1 = time.time()
                         thisLine = self.book.line()
                         self.drawLine(lastLine)
@@ -140,11 +144,20 @@ class BookReader(object):
                             self.i += 1
                         self.drawNewLine(thisLine)
                         lastLine = thisLine
-                time.sleep(0.03) #try to save some cpu cycles
+                time.sleep(0.1) #try to save some cpu cycles
         finally:
             #always stop the thread
             self.inputThread.stop()
  
+    def showMessage(self, message, style='reverse'):
+		x = curses.COLS - len(message) - 1
+		if style == 'red':
+			styleArgument = curses.color_pair(1)
+		else:
+		    styleArgument = curses.A_REVERSE
+		self.screen.addstr(self.i, x, message, curses.A_REVERSE)
+		self.refresh()
+		
     def drawNewLine(self, line, y=None, x=0):
         if y == None:
             y = self.i
@@ -187,13 +200,13 @@ class InputThread(Thread):
         
     def run(self):
         while self._running:
-            time.sleep(0.25)
+            time.sleep(0.1)
             c =  self.screen.getch()
             if c != -1:
                 self.key = c
             if self.key == 113 or self.key == 81: #'q' or 'Q'
-                self.stop()
-                self.exitObject.stop()
+                self.stop() #stop the thread
+                self.exitObject.stop() #stop the main program
             
     def stop(self):
         self._running = False
@@ -222,6 +235,4 @@ if __name__ == '__main__':
     else:
         def main(stdscr):
             return BookReader(stdscr)
-        
         curses.wrapper(main)
-    
