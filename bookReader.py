@@ -117,7 +117,8 @@ class BookReader(object):
         
         curses.curs_set(0)
         self.screen.timeout(0)
-        curses.init_pair(1,curses.COLOR_RED,curses.COLOR_YELLOW)
+        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_RED)
+        curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_GREEN)
         
         self.i = 0
         lastLine = ''
@@ -128,7 +129,7 @@ class BookReader(object):
                 if key == 32: #space character
                     self.togglePaused()
                     t1 = 0
-                    self.showMessage('PAUSED', 'red')
+                    self.showMessage('PAUSED', 'green')
                     
                 if key == 258: #key down
                     t1 = 0
@@ -138,7 +139,7 @@ class BookReader(object):
                         t1 = time.time()
                         thisLine = self.book.line()
                         self.drawLine(lastLine)
-                        if self.i+2 >= curses.LINES:
+                        if self.i + 2 >= curses.LINES:
                             self.i = 0
                         else:
                             self.i += 1
@@ -150,13 +151,15 @@ class BookReader(object):
             self.inputThread.stop()
  
     def showMessage(self, message, style='reverse'):
-		x = curses.COLS - len(message) - 1
-		if style == 'red':
-			styleArgument = curses.color_pair(1)
-		else:
-		    styleArgument = curses.A_REVERSE
-		self.screen.addstr(self.i, x, message, curses.A_REVERSE)
-		self.refresh()
+        x = curses.COLS - len(message) - 3
+        if style == 'red':
+            styleArgument = curses.color_pair(1)
+        elif style == 'green':
+            styleArgument = curses.color_pair(2)
+        else:
+            styleArgument = curses.A_REVERSE
+        self.screen.addstr(self.i, x, ' ' + message + ' ', styleArgument)
+        self.refresh()
 		
     def drawNewLine(self, line, y=None, x=0):
         if y == None:
@@ -200,7 +203,7 @@ class InputThread(Thread):
         
     def run(self):
         while self._running:
-            time.sleep(0.1)
+            time.sleep(0.05)
             c =  self.screen.getch()
             if c != -1:
                 self.key = c
