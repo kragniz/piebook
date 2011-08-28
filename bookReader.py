@@ -113,6 +113,8 @@ class BookReader(object):
         self.inputThread = InputThread(self.screen, self.exitObject)
         self.inputThread.start()
         
+        self._paused = False
+        
         curses.curs_set(0)
         self.cols = curses.COLS
         self.rows = curses.LINES
@@ -124,16 +126,19 @@ class BookReader(object):
         try:
             while not self.exitObject.stopping():
                 key = self.inputThread.read()
-                if time.time()-t1 >= 2.5:# or skipLine:
-                    t1 = time.time()
-                    thisLine = self.book.line()
-                    self.drawLine(lastLine, i)
-                    if i+2 >= curses.LINES:
-                        i = 0
-                    else:
-                        i += 1
-                    self.drawNewLine(thisLine, i)
-                    lastLine = thisLine
+                if key == 32: #space character
+                    self.changePaused()
+                if not self.paused():
+                    if time.time()-t1 >= 2.5:# or skipLine:
+                        t1 = time.time()
+                        thisLine = self.book.line()
+                        self.drawLine(lastLine, i)
+                        if i+2 >= curses.LINES:
+                            i = 0
+                        else:
+                            i += 1
+                        self.drawNewLine(thisLine, i)
+                        lastLine = thisLine
                 time.sleep(0.03) #try to save some cpu cycles
         finally:
             #always stop the thread
@@ -149,7 +154,13 @@ class BookReader(object):
         
     def refresh(self):
         self.screen.refresh()
-
+        
+    def changePaused(self):
+        self._paused = not self._paused
+        
+    def paused(self):
+        return self._paused
+        
 class Exit(object):
     def __init__(self):
         self._stopping = False
