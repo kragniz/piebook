@@ -1,4 +1,4 @@
-#/usr/bin/env python
+#!/usr/bin/env python
 #A small text-based ebook reader
 import curses, sys, time, json
 from os.path import splitext
@@ -120,17 +120,21 @@ class BookReader(object):
         
         i = 0
         lastLine = ''
+        t1 = 0
         try:
             while not self.exitObject.stopping():
-                thisLine = self.book.line()
-                self.drawLine(lastLine, i)
-                if i+2 >= curses.LINES:
-                    i = 0
-                else:
-                    i += 1
-                self.drawNewLine(thisLine, i)
-                lastLine = thisLine
-                time.sleep(2.5)
+                key = self.inputThread.read()
+                if time.time()-t1 >= 2.5:# or skipLine:
+                    t1 = time.time()
+                    thisLine = self.book.line()
+                    self.drawLine(lastLine, i)
+                    if i+2 >= curses.LINES:
+                        i = 0
+                    else:
+                        i += 1
+                    self.drawNewLine(thisLine, i)
+                    lastLine = thisLine
+                time.sleep(0.03) #try to save some cpu cycles
         finally:
             #always stop the thread
             self.inputThread.stop()
@@ -167,17 +171,18 @@ class InputThread(Thread):
         
     def run(self):
         while self._running:
+            time.sleep(0.25)
             c =  self.screen.getch()
-            if not self.key:
+            if c != -1:
                 self.key = c
-            if True:
-                #self.stop()
+            if self.key == 113 or self.key == 81: #'q' or 'Q'
+                self.stop()
                 self.exitObject.stop()
             
     def stop(self):
         self._running = False
         
-    def readInput(self):
+    def read(self):
         key = self.key
         self.key = ''
         return key
