@@ -109,7 +109,8 @@ class BookReader(object):
     def __init__(self, screen):
         self.screen = screen
         self.book = Book('example.txt')
-        self.inputThread = InputThread(self.screen)
+        self.exitObject = Exit()
+        self.inputThread = InputThread(self.screen, self.exitObject)
         self.inputThread.start()
         
         curses.curs_set(0)
@@ -119,22 +120,21 @@ class BookReader(object):
         
         i = 0
         lastLine = ''
-        while True:
-            #keystrokes/commands
-            c =  self.screen.getch()
-            if c == 'q':
-                break
-            
-            thisLine = self.book.line()
-            self.drawLine(lastLine, i)
-            if i+2 >= curses.LINES:
-                i = 0
-            else:
-                i += 1
-            self.drawNewLine(thisLine, i)
-            lastLine = thisLine
-            time.sleep(2.5)
-        
+        try:
+            while not self.exitObject.stopping():
+                thisLine = self.book.line()
+                self.drawLine(lastLine, i)
+                if i+2 >= curses.LINES:
+                    i = 0
+                else:
+                    i += 1
+                self.drawNewLine(thisLine, i)
+                lastLine = thisLine
+                time.sleep(2.5)
+        finally:
+            #always stop the thread
+            self.inputThread.stop()
+ 
     def drawNewLine(self, line, y, x=0):
         self.screen.addstr(y, x, line[:curses.COLS-1].ljust(curses.COLS), curses.A_UNDERLINE)
         self.refresh()
@@ -146,16 +146,41 @@ class BookReader(object):
     def refresh(self):
         self.screen.refresh()
 
+class Exit(object):
+    def __init__(self):
+        self._stopping = False
+        
+    def stop(self):
+        self._stopping = True
+        
+    def stopping(self):
+        return self._stopping
+        
+        
 class InputThread(Thread):
-    def __init__(self, screen):
+    def __init__(self, screen, exitObject):
         Thread.__init__(self, name="InputThread")
         self.screen = screen
+        self.exitObject = exitObject
+        self._running = True
+        self.key = ''
         
     def run(self):
-        while True:
+        while self._running:
             c =  self.screen.getch()
-            if c == 'q':
-                print 'q got'
+            if not self.key:
+                self.key = c
+            if True:
+                #self.stop()
+                self.exitObject.stop()
+            
+    def stop(self):
+        self._running = False
+        
+    def readInput(self):
+        key = self.key
+        self.key = ''
+        return key
         
 if __name__ == '__main__':
     #Main program bits
