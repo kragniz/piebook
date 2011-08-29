@@ -86,6 +86,9 @@ class BookHistory(object):
     def setSpeed(self, s):
         self._historyData['speed'] = s
         
+    def speed(self):
+        return self._historyData['speed']
+        
     def position(self):
         return self._historyData['position']
 
@@ -143,11 +146,19 @@ class BookReader(object):
                     t1 = 0
                     self.showMessage('PAUSED', 'green')
                     
-                if key == 258: #key down
+                elif key == 258: #key down
                     t1 = 0
+                    
+                elif key == 43: #'+'
+                    self.history.setSpeed(self.history.speed() + 0.1)
+                    self.showMessage('SPEED IS NOW %s' % self.history.speed() , 'green')
+                    
+                elif key == 45: #'-'
+                    self.history.setSpeed(self.history.speed() - 0.1)
+                    self.showMessage('SPEED IS NOW %s' % self.history.speed() , 'green')
                 
                 if not self.paused():
-                    if time.time()-t1 >= 2.5:
+                    if time.time()-t1 >= self.history.speed():
                         t1 = time.time()
                         thisLine = self.book.line()
                         self.drawLine(lastLine)
