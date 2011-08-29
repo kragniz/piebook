@@ -33,9 +33,14 @@ class Book(object):
         l += [i]
         return l
     
-    def setPosition(self, lineNumber):
-        '''Make lineNumber the current line'''
-                
+    def setPosition(self, pos):
+        '''Set the position in the book'''
+        self.text.seek(pos)
+        
+    def position(self):
+        '''Get the position in the book'''
+        return self.text.tell()
+        
     def line(self):
         '''Return the next line'''
         line = []
@@ -69,31 +74,31 @@ class BookHistory(object):
     def __init__(self):
         self._historyData = {
             'bookFileName' : '',
-            'lineNumber' : 0,
+            'position' : 0,
             'speed' : 2.5}
             
     def setBookFile(self, bookFileName):
         self._historyData['bookFileName'] = bookFileName
         
-    def setLineNumber(self, n):
-        self._historyData['lineNumber'] = n
+    def setPosition(self, n):
+        self._historyData['position'] = n
         
     def setSpeed(self, s):
         self._historyData['speed'] = s
         
-    def lineNumber(self):
-        return self._historyData['lineNumber']
-    
-    def incrementLineNumber(self):
-        self._historyData['lineNumber'] += 1
-        
+    def position(self):
+        return self._historyData['position']
+
     def read(self, historyFileName=None):
         '''Read the settings made from a previous run of this program'''
         if not historyFileName:
             historyFileName = splitext(self._historyData['bookFileName'])[0] + '.hst'
-            
-        data = ''.join(open(historyFileName).readlines())
-        self._historyData = json.loads(data)
+        try:
+            data = ''.join(open(historyFileName).readlines())
+            self._historyData = json.loads(data)
+            return True
+        except:
+            return False
         
     def write(self, historyFileName=None):
         '''Write the settings for next time the program is run'''
@@ -107,8 +112,15 @@ class BookHistory(object):
 class BookReader(object):
     '''Display the book in a terminal'''
     def __init__(self, screen):
+        bookName = 'example.txt'
         self.screen = screen
-        self.book = Book('example.txt')
+        
+        self.book = Book(bookName)
+        self.history = BookHistory()
+        self.history.setBookFile(bookName)
+        self.history.read()
+        self.book.setPosition(self.history.position())
+        
         self.exitObject = Exit()
         self.inputThread = InputThread(self.screen, self.exitObject)
         self.inputThread.start()
@@ -149,6 +161,8 @@ class BookReader(object):
         finally:
             #always stop the thread
             self.inputThread.stop()
+            self.history.setPosition(self.book.position())
+            self.history.write()
  
     def showMessage(self, message, style='reverse'):
         x = curses.COLS - len(message) - 3
