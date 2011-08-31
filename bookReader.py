@@ -18,6 +18,8 @@ class Book(object):
         self.lineLength = length
         
     def _checkLength(self, line):
+        '''Return True if the length of line is not larger than the maximum
+        length of the line'''
         return (len(line) <= self.lineLength)
     
     def _split(self, line):
@@ -78,18 +80,23 @@ class BookHistory(object):
             'speed' : 2.5}
             
     def setBookFile(self, bookFileName):
+        '''Set the filename of the book/text document'''
         self._historyData['bookFileName'] = bookFileName
         
     def setPosition(self, n):
+        '''Set the current position in the book/text document in bytes'''
         self._historyData['position'] = n
         
     def setSpeed(self, s):
+        '''Set the delay between each line re-draw in seconds'''
         self._historyData['speed'] = s
         
     def speed(self):
+        '''Return the delay between each line re-draw in seconds'''
         return self._historyData['speed']
         
     def position(self):
+        '''Return the current position in the book/text document in bytes'''
         return self._historyData['position']
 
     def read(self, historyFileName=None):
@@ -176,6 +183,8 @@ class BookReader(object):
             self.history.write()
  
     def showMessage(self, message, style='reverse'):
+        '''Show a message on the current line. Style can be 'red', 'green' for
+        colour, anything else for reverse video'''
         x = curses.COLS - len(message) - 3
         if style == 'red':
             styleArgument = curses.color_pair(1)
@@ -187,39 +196,49 @@ class BookReader(object):
         self.refresh()
 		
     def drawNewLine(self, line, y=None, x=0):
+        '''Draw a line of underlined text'''
         if y == None:
             y = self.i
         self.screen.addstr(y, x, line[:curses.COLS-1].ljust(curses.COLS), curses.A_UNDERLINE)
         self.refresh()
         
     def drawLine(self, line, y=None, x=0):
+        '''Draw a line of normal text'''
         if y == None:
             y = self.i
         self.screen.addstr(y, x, line[:curses.COLS-1].ljust(curses.COLS), curses.color_pair(0))
         self.refresh()
         
     def refresh(self):
+        '''Refresh the terminal'''
         self.screen.refresh()
         
     def togglePaused(self):
+        '''Pause or un-pause the scrolling of text'''
         self._paused = not self._paused
         
     def paused(self):
+        '''Return True if scrolling is paused'''
         return self._paused
         
 class Exit(object):
+    '''A class to signal when to stop the main program'''
     def __init__(self):
         self._stopping = False
         
     def stop(self):
+        '''Signal to stop the program at the next convenient moment'''
         self._stopping = True
         
     def stopping(self):
+        '''Return True if the program is stopping'''
         return self._stopping
         
         
 class InputThread(Thread):
+    '''A thread for taking input from keyboard'''
     def __init__(self, screen, exitObject):
+        '''Create thread'''
         Thread.__init__(self, name="InputThread")
         self.screen = screen
         self.exitObject = exitObject
@@ -227,6 +246,7 @@ class InputThread(Thread):
         self.key = ''
         
     def run(self):
+        '''Run the thread. Do not call this directly, use InputThread.start()'''
         while self._running:
             time.sleep(0.05)
             c =  self.screen.getch()
@@ -237,15 +257,18 @@ class InputThread(Thread):
                 self.exitObject.stop() #stop the main program
             
     def stop(self):
+        '''Stop the thread from running'''
         self._running = False
         
     def read(self):
+        '''Return the last pressed key'''
         key = self.key
         self.key = ''
         return key
         
 if __name__ == '__main__':
-    #Main program bits
+    '''Main program bits'''
+    #TODO Add command line options
     if len(sys.argv) > 1:
         if sys.argv[1] == 'book':
             book = Book('example.txt')
@@ -263,4 +286,4 @@ if __name__ == '__main__':
     else:
         def main(stdscr):
             return BookReader(stdscr)
-        curses.wrapper(main)
+        curses.wrapper(main) #use the safe curses wrapper in case things get bad
