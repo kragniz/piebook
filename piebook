@@ -3,13 +3,15 @@
 import curses, sys, time, json
 from os.path import splitext
 from threading import Thread
+from optparse import OptionParser
 
 class Book(object):
     '''Handle reading and manipulating lines from a text file'''
-    def __init__(self, textFileName):
+    def __init__(self, textFileName, lineLength=80):
         '''Create a book object'''
-        self.lineLength = 80
-        self.text = open(textFileName, 'r')
+        self.lineLength = lineLength
+        self.textFileName = textFileName
+        self.text = open(self.textFileName, 'r')
         
         self.w = [] #words left over from the last line
         
@@ -42,6 +44,12 @@ class Book(object):
     def position(self):
         '''Get the position in the book'''
         return self.text.tell()
+    
+    def setPositionPercent(self, percent):
+        '''Set the position in book, by percentage'''
+        fileLength = os.path.getsize(self.textFileName)
+        byte = long(percent/100 * fileLength)
+        self.setPosition(byte)
         
     def line(self):
         '''Return the next line'''
@@ -121,15 +129,18 @@ class BookHistory(object):
     
 class BookReader(object):
     '''Display the book in a terminal'''
-    def __init__(self, screen):
-        bookName = 'example.txt'
+    def __init__(self, screen, bookName, options):
         self.screen = screen
+        
+        self.options = options
         
         self.book = Book(bookName)
         self.history = BookHistory()
         self.history.setBookFile(bookName)
         self.history.read()
-        self.book.setPosition(self.history.position())
+        
+        if not self.options.beginning:
+            self.book.setPosition(self.history.position())
         
         self.exitObject = Exit()
         self.inputThread = InputThread(self.screen, self.exitObject)
@@ -139,8 +150,13 @@ class BookReader(object):
         
         curses.curs_set(0)
         self.screen.timeout(0)
-        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_RED)
-        curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_GREEN)
+        if self.options.invert:
+            curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        else:
+            curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLACK)
+            
+        curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_RED)
+        curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_GREEN)
         
         self.i = 0
         lastLine = ''
@@ -187,9 +203,9 @@ class BookReader(object):
         colour, anything else for reverse video'''
         x = curses.COLS - len(message) - 3
         if style == 'red':
-            styleArgument = curses.color_pair(1)
-        elif style == 'green':
             styleArgument = curses.color_pair(2)
+        elif style == 'green':
+            styleArgument = curses.color_pair(3)
         else:
             styleArgument = curses.A_REVERSE
         self.screen.addstr(self.i, x, ' ' + message + ' ', styleArgument)
@@ -206,7 +222,7 @@ class BookReader(object):
         '''Draw a line of normal text'''
         if y == None:
             y = self.i
-        self.screen.addstr(y, x, line[:curses.COLS-1].ljust(curses.COLS), curses.color_pair(0))
+        self.screen.addstr(y, x, line[:curses.COLS-1].ljust(curses.COLS), curses.color_pair(1))
         self.refresh()
         
     def refresh(self):
@@ -239,7 +255,7 @@ class InputThread(Thread):
     '''A thread for taking input from keyboard'''
     def __init__(self, screen, exitObject):
         '''Create thread'''
-        Thread.__init__(self, name="InputThread")
+        Thread.__init__(self, name='InputThread')
         self.screen = screen
         self.exitObject = exitObject
         self._running = True
@@ -268,22 +284,27 @@ class InputThread(Thread):
         
 if __name__ == '__main__':
     '''Main program bits'''
-    #TODO Add command line options
-    if len(sys.argv) > 1:
-        if sys.argv[1] == 'book':
-            book = Book('example.txt')
-            for i in range(30):
-                print book.line()
-                
-        if sys.argv[1] == 'history':
-            history = BookHistory()
-            history.setBookFile('example.txt')
-            history.read()
-            print 'line number:', history.lineNumber()
-            history.incrementLineNumber()
-            history.write()
-            
+    usage = 'usage: %prog [options] [book file]'
+    description = '''%prog is a small text document reader with nice auto
+scrolling.'''
+    parser = OptionParser(usage, description=description)
+    parser.add_option('-b', '--beginning',
+                      action='store_true',
+                      default=False,
+                      dest='beginning',
+                      help='start the book from the beginning')
+                      
+    parser.add_option('-i', '--invert',
+                      action='store_true',
+                      default=False,
+                      dest='invert',
+                      help='invert the colour of the text to black on white')
+                      
+    (options, args) = parser.parse_args()
+    if len(args) != 1:
+        print options, args
+        parser.error('incorrect number of arguments (need only one)')
     else:
         def main(stdscr):
-            return BookReader(stdscr)
+            return BookReader(stdscr, args[0], options)
         curses.wrapper(main) #use the safe curses wrapper in case things get bad
