@@ -4,3 +4,6 @@
 *.hst
 #also backup files
 *~
+dist/*
+build/*
+MANIFEST

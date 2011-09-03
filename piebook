@@ -1,9 +1,28 @@
 #!/usr/bin/env python
-#A small text-based ebook reader
+# -*- coding: utf-8 -*-
+#
+# This file is part of piebook - A small console-based ebook reader written in python
+#
+# Copyright (C) 2011 Louis Taylor <kragniz@gmail.com>                  
+#                                                                            
+# This program is free software: you can redistribute it and/or modify         
+# it under the terms of the GNU General Public License as published by         
+# the Free Software Foundation, either version 3 of the License, or            
+# (at your option) any later version.                                          
+#                                                                            
+# This program is distributed in the hope that it will be useful,              
+# but WITHOUT ANY WARRANTY; without even the implied warranty of               
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+# GNU General Public License for more details.                                 
+#                                                                           
+# You should have received a copy of the GNU General Public License            
+# along with this program.  If not, see http://www.gnu.org/licenses/gpl-3.0.txt 
+
 import curses, sys, time, json
 from os.path import splitext
 from threading import Thread
 from optparse import OptionParser
+import piebookData
 
 class Book(object):
     '''Handle reading and manipulating lines from a text file'''
@@ -285,9 +304,7 @@ class InputThread(Thread):
 if __name__ == '__main__':
     '''Main program bits'''
     usage = 'usage: %prog [options] [book file]'
-    description = '''%prog is a small text document reader with nice auto
-scrolling.'''
-    parser = OptionParser(usage, description=description)
+    parser = OptionParser(usage, description=piebookData.DESCRIPTION, version=piebookData.VERSION)
     parser.add_option('-b', '--beginning',
                       action='store_true',
                       default=False,
@@ -300,9 +317,10 @@ scrolling.'''
                       dest='invert',
                       help='invert the colour of the text to black on white')
                       
+                      #TODO add option to start at a percentage of the way through the book
+                      
     (options, args) = parser.parse_args()
     if len(args) != 1:
-        print options, args
         parser.error('incorrect number of arguments (need only one)')
     else:
         def main(stdscr):
