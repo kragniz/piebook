@@ -56,19 +56,23 @@ class Book(object):
         l += [i]
         return l
     
-    def setPosition(self, pos):
-        '''Set the position in the book'''
-        self.text.seek(pos)
-        
+    @property
     def position(self):
         '''Get the position in the book'''
         return self.text.tell()
+
+    @position.setter
+    def position(self, pos):
+        '''Set the position in the book'''
+        self.text.seek(pos)
+        
+
     
     def setPositionPercent(self, percent):
         '''Set the position in book, by percentage'''
         fileLength = os.path.getsize(self.textFileName)
         byte = long(percent/100 * fileLength)
-        self.setPosition(byte)
+        self.position = byte
         
     def line(self):
         '''Return the next line'''
@@ -113,14 +117,16 @@ class BookHistory(object):
     def setPosition(self, n):
         '''Set the current position in the book/text document in bytes'''
         self._historyData['position'] = n
-        
-    def setSpeed(self, s):
-        '''Set the delay between each line re-draw in seconds'''
-        self._historyData['speed'] = s
-        
+    
+    @property
     def speed(self):
         '''Return the delay between each line re-draw in seconds'''
         return self._historyData['speed']
+
+    @speed.setter
+    def speed(self, s):
+        '''Set the delay between each line re-draw in seconds'''
+        self._historyData['speed'] = s
         
     def position(self):
         '''Return the current position in the book/text document in bytes'''
@@ -159,7 +165,7 @@ class BookReader(object):
         self.history.read()
         
         if not self.options.beginning:
-            self.book.setPosition(self.history.position())
+            self.book.position = self.history.position()
         
         self.exitObject = Exit()
         self.inputThread = InputThread(self.screen, self.exitObject)
@@ -192,15 +198,15 @@ class BookReader(object):
                     t1 = 0
                     
                 elif key == 43 or key == 61: #`+` or `=`
-                    self.history.setSpeed(self.history.speed() + 0.1)
-                    self.showMessage('SPEED IS NOW %s' % self.history.speed() , 'green')
+                    self.history.speed = self.history.speed + 0.1
+                    self.showMessage('SPEED IS NOW %s' % self.history.speed , 'green')
                     
                 elif key == 45 or key == 95: #`-` or `_`
-                    self.history.setSpeed(self.history.speed() - 0.1)
-                    self.showMessage('SPEED IS NOW %s' % self.history.speed() , 'green')
+                    self.history.speed = self.history.speed - 0.1
+                    self.showMessage('SPEED IS NOW %s' % self.history.speed , 'green')
                 
                 if not self.paused():
-                    if time.time()-t1 >= self.history.speed():
+                    if time.time()-t1 >= self.history.speed:
                         t1 = time.time()
                         thisLine = self.book.line()
                         self.drawLine(lastLine)
@@ -214,7 +220,7 @@ class BookReader(object):
         finally:
             #always stop the thread
             self.inputThread.stop()
-            self.history.setPosition(self.book.position())
+            self.history.position = self.book.position
             self.history.write()
  
     def showMessage(self, message, style='reverse'):
