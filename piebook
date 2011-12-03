@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License            
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl-3.0.txt 
 
-import curses, sys, time, json
+import curses, time, json, os
 from os.path import splitext
 from threading import Thread
 from optparse import OptionParser
@@ -183,7 +183,7 @@ class BookReader(object):
         try:
             while not self.exitObject.stopping():
                 key = self.inputThread.read()
-                if key == 32: #space character
+                if key == 32: #`space` character
                     self.togglePaused()
                     t1 = 0
                     self.showMessage('PAUSED', 'green')
@@ -191,11 +191,11 @@ class BookReader(object):
                 elif key == 258: #key down
                     t1 = 0
                     
-                elif key == 43: #'+'
+                elif key == 43 or key == 61: #`+` or `=`
                     self.history.setSpeed(self.history.speed() + 0.1)
                     self.showMessage('SPEED IS NOW %s' % self.history.speed() , 'green')
                     
-                elif key == 45: #'-'
+                elif key == 45 or key == 95: #`-` or `_`
                     self.history.setSpeed(self.history.speed() - 0.1)
                     self.showMessage('SPEED IS NOW %s' % self.history.speed() , 'green')
                 

@@ -7,7 +7,7 @@ HOW TO USE
 Piebook takes commands from key presses. The available commands are:
 Pause scrolling : space
 Skip line : down arrow
-Increase time to next line : plus (+)
+Increase time to next line : plus (+) or (=)
 Decrease time to next line : hyphen (-)
 Quit the program : q
 
@@ -24,7 +24,7 @@ HACKING
 Piebook source code is maintained using the Git version control system and is
 available at the following location:
 
-    git://gitorious.org/piebook/piebook.git
+    git://github.com/kragniz/piebook.git
 
 AUTHORS
 =======
